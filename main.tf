@@ -1,5 +1,5 @@
 module "lambda-default-iam" {
-  source = "../lambda-default-iam"
+  source = "github.com/hashiops/tfmodule-lambda_default_iam"
 }
 
 resource "aws_lambda_function" "function" {
