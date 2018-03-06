@@ -1,3 +1,5 @@
+/* TODO Add variables for support of swagger template of API */
+
 module "lambda-default-iam" {
   source = "github.com/hashiops/tfmodule-lambda_default_iam"
 }
@@ -18,82 +20,18 @@ resource "aws_lambda_alias" "alias" {
   function_version = "${aws_lambda_function.function.version}"
 }
 
+data "template_file" "swagger_api" {
+  template = "${file("swagger_api.yml")}"
+
+  vars {
+    some_variable = "test"
+  }
+}
+
 resource "aws_api_gateway_rest_api" "RootAPI" {
   name        = "API NAME" # "${var.api_gateway_name}"
   description = "api description" # "${var.api_gateway_description}"
-  body        = <<EOF
-  swagger: '2.0'
-  info:
-    title: "API NAME"
-    version: "0.1"
-    description: "api description"
-  schemes:
-  - https
-  - http
-  paths:
-    "/api":
-      post:
-        consumes:
-        - application/json
-        produces:
-        - application/json
-        parameters:
-        - name: InvocationType
-          in: header
-          required: false
-          type: string
-        - in: body
-          name: Input
-          required: true
-          schema:
-            "$ref": "#/definitions/Input"
-        responses:
-          '200':
-            description: 200 response
-            schema:
-              "$ref": "#/definitions/Result"
-        x-amazon-apigateway-request-validator: Validate body
-        x-amazon-apigateway-integration:
-          responses:
-            default:
-              statusCode: '200'
-              responseTemplates:
-                application/json: ""
-          uri: arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:261490016054:function:python_Function:hash_0/invocations
-          passthroughBehavior: when_no_templates
-          httpMethod: POST
-          type: aws
-  definitions:
-    Input:
-      type: object
-      required:
-      - a
-      properties:
-        a:
-          type: number
-      title: Input
-    Output:
-      type: object
-      properties:
-        c:
-          type: number
-      title: Output
-    Result:
-      type: object
-      properties:
-        input:
-          "$ref": "#/definitions/Input"
-        output:
-          "$ref": "#/definitions/Output"
-      title: Result
-  x-amazon-apigateway-request-validators:
-    Validate body:
-      validateRequestParameters: false
-      validateRequestBody: true
-    Validate query string parameters and headers:
-      validateRequestParameters: true
-      validateRequestBody: false
-EOF
+  body        = "${data.template_file.swagger_api.rendered}"
 }
 
 resource "aws_lambda_permission" "allow_api_gateway" {
