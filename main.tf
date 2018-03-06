@@ -15,7 +15,7 @@ resource "aws_lambda_function" "function" {
 }
 
 resource "aws_lambda_alias" "alias" {
-  name             = "hash_0"
+  name             = "${var.alias}"
   function_name    = "${aws_lambda_function.function.arn}"
   function_version = "${aws_lambda_function.function.version}"
 }
@@ -24,7 +24,15 @@ data "template_file" "swagger_api" {
   template = "${file("swagger_api.yml")}"
 
   vars {
-    some_variable = "test"
+    api_gateway_name = "${var.api_gateway_name}"
+    api_gateway_description = "${var.api_gateway_description}"
+    api_gateway_version = "${var.api_gateway_version}"
+    api_gateway_endpoint_uri = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${aws_lambda_alias.alias.arn}/invocations"
+    api_gateway_path = "${var.api_gateway_path}"
+    api_gateway_method = "${var.api_gateway_method}"
+    api_gateway_type = "${var.api_gateway_type}"
+    api_gateway_dataType_input = "${var.api_gateway_dataType_input}"
+    api_gateway_dataType_output = "${var.api_gateway_dataType_output}"
   }
 }
 
