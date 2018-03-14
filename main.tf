@@ -84,14 +84,28 @@ resource "aws_api_gateway_method" "Method" {
 
 resource "aws_api_gateway_integration" "LambdaIntegration" {
   # depends_on  = ["aws_lambda_alias.alias"]
-  # count       = "${length(split(",", lookup(var.dataStructure[length(var.dataStructure) - 1], "api_gateway_method")))}"
+  count       = "${length(var.dataStructure)}"
   rest_api_id = "${aws_api_gateway_rest_api.RootAPI.id}"
   resource_id = "${element(aws_api_gateway_resource.Resource.*.id, index(split(",", lookup(var.dataStructure[length(var.dataStructure) - 1], "api_gateway_target")), "lambda"))}"
   http_method = "${element(aws_api_gateway_method.Method.*.http_method, index(split(",", lookup(var.dataStructure[length(var.dataStructure) - 1], "api_gateway_target")), "lambda"))}"
   integration_http_method = "${upper(element(split(",", lookup(var.dataStructure[length(var.dataStructure) - 1], "api_gateway_method")), index(split(",", lookup(var.dataStructure[length(var.dataStructure) - 1], "api_gateway_target")), "lambda")))}"
   type = "${upper(element(split(",", lookup(var.dataStructure[length(var.dataStructure) - 1], "api_gateway_type")), index(split(",", lookup(var.dataStructure[length(var.dataStructure) - 1], "api_gateway_target")), "lambda")))}"
   uri = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${aws_lambda_function.function.qualified_arn}/invocations"
+  #uri = "${count.index != length(var.dataStructure) - 1 ? element(self.*.uri, count.index) : replace(replace("arn:aws:apigateway:REGION:lambda:path/2015-03-31/functions/LAMBDA_ARN/invocations", REGION, var.region), LAMBDA_ARN, aws_lambda_function.function.qualified_arn)}"
+
+  lifecycle {
+    ignore_changes = [ "${count.index != length(var.dataStructure) - 1 ? "uri" : ""}" ]
+  }
 }
+
+/* NOTE
+replace(string, search, replace) - Does a search and replace on the given string.
+All instances of search are replaced with the value of replace. If search is wrapped
+in forward slashes, it is treated as a regular expression. If using a regular
+expression, replace can reference subcaptures in the regular expression by
+using $n where n is the index or name of the subcapture. If using a regular expression,
+the syntax conforms to the re2 regular expression syntax.
+*/
 
 resource "aws_api_gateway_integration" "ExternalIntegration" {
   # depends_on  = ["aws_lambda_alias.alias"]
@@ -131,12 +145,12 @@ resource "aws_api_gateway_integration_response" "ResponseIntegration" {
 
 resource "aws_lambda_permission" "allow_api_gateway" {
   depends_on    = ["aws_api_gateway_integration.LambdaIntegration"]
-  # count         = "${length(var.dataStructure)}"
+  count         = "${length(var.dataStructure)}"
   function_name = "${aws_lambda_function.function.arn}"
   statement_id  = "AllowExecutionFromApiGateway"
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "arn:aws:execute-api:${var.region}:${var.accountId}:${aws_api_gateway_rest_api.RootAPI.id}/*/${upper(element(split(",", lookup(var.dataStructure[length(var.dataStructure) - 1], "api_gateway_method")), index(split(",", lookup(var.dataStructure[length(var.dataStructure) - 1], "api_gateway_target")), "lambda")))}/${element(split(",", lookup(var.dataStructure[length(var.dataStructure) - 1], "api_gateway_path")), index(split(",", lookup(var.dataStructure[length(var.dataStructure) - 1], "api_gateway_target")), "lambda"))}"
+  source_arn    = "arn:aws:execute-api:${var.region}:${var.accountId}:${aws_api_gateway_rest_api.RootAPI.id}/*/${upper(element(split(",", lookup(var.dataStructure[count.index], "api_gateway_method")), index(split(",", lookup(var.dataStructure[count.index], "api_gateway_target")), "lambda")))}/${element(split(",", lookup(var.dataStructure[count.index], "api_gateway_path")), index(split(",", lookup(var.dataStructure[count.index], "api_gateway_target")), "lambda"))}"
   qualifier     = "${aws_lambda_function.function.version}"
 }
 
@@ -144,6 +158,6 @@ resource "aws_api_gateway_deployment" "DeployAPI" {
   depends_on  = ["aws_api_gateway_method.Method"]
   count       = "${length(var.dataStructure)}"
   rest_api_id = "${aws_api_gateway_rest_api.RootAPI.id}"
-  description = "Targets to ${aws_lambda_function.function.arn}:${aws_lambda_function.function.version}"
+  # description = "Targets to ${aws_lambda_function.function.arn}:${aws_lambda_function.function.version}"
   stage_name  = "${lookup(var.dataStructure[count.index], "alias")}"
 }
