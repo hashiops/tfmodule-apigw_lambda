@@ -2,4 +2,4 @@
 variable "region" {}
 variable "accountId" {}
 
-variable "dataStructure" { type = "list" }
+variable "dataStructure" { type = "map" }
