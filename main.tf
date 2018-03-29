@@ -30,6 +30,14 @@ resource "aws_api_gateway_rest_api" "RootAPI" {
   description = "${lookup(var.dataStructure,"api_gateway_description")}"
 }
 
+resource "aws_route53_record" "api_cname" {
+  zone_id = "${var.route53_zone_id}"
+  name    = "${lookup(var.dataStructure,"lambda_function_name")}"
+  type    = "CNAME"
+  ttl     = 300
+  records = ["${aws_api_gateway_rest_api.RootAPI.id}.execute-api.${var.region}.amazonaws.com"]
+}
+
 # resource "aws_lambda_permission" "allow_api_gateway" {
 #   depends_on    = ["aws_api_gateway_rest_api.RootAPI"]
 #   function_name = "${aws_lambda_function.function.arn}"
