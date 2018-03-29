@@ -33,7 +33,6 @@ resource "aws_api_gateway_rest_api" "RootAPI" {
 resource "aws_api_gateway_domain_name" "RootAPI" {
   domain_name = "${var.environment}-${lookup(var.dataStructure,"lambda_function_name")}.${var.root_domain}"
 
-  certificate_name = "${var.environment}-${lookup(var.dataStructure,"lambda_function_name")}.${var.root_domain}"
   certificate_arn  = "${lookup(var.dataStructure,"api_gateway_acm_cert")}"
 }
 
