@@ -30,6 +30,16 @@ resource "aws_api_gateway_rest_api" "RootAPI" {
   description = "${lookup(var.dataStructure,"api_gateway_description")}"
 }
 
+resource "null_resource" "RootAPI_configuration" {
+
+  triggers {
+    endpoint_configuration_type = "${aws_api_gateway_rest_api.RootAPI.id}"
+  }
+  provisioner "local-exec" {
+    command = "aws apigateway update-rest-api --rest-api-id ${aws_api_gateway_rest_api.RootAPI.id} --patch-operations op=replace,path=/endpointConfiguration/types/EDGE,value=REGIONAL"
+  }
+}
+
 resource "aws_api_gateway_domain_name" "RootAPI" {
   domain_name = "${var.environment}-${lookup(var.dataStructure,"lambda_function_name")}.${var.root_domain}"
 
