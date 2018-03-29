@@ -13,6 +13,13 @@ resource "aws_lambda_function" "function" {
   memory_size       = "${lookup(var.dataStructure,"lambda_function_memory")}"
   filename          = "source.zip"
 
+  environment {
+    variables = {
+      region = "${var.region}"
+      dbUrl = "${lookup(var.dataStructure,"lambda_db_url")}"
+    }
+  }
+
   lifecycle = {
     ignore_changes = ["filename"]
   }
