@@ -9,6 +9,7 @@ resource "aws_lambda_function" "function" {
   role              = "${module.lambda-default-iam.lambda_role_arn}"
   handler           = "${lookup(var.dataStructure,"lambda_function_handler")}"
   runtime           = "${lookup(var.dataStructure,"lambda_function_runtime")}"
+  timeout           = "${lookup(var.dataStructure,"lambda_function_timeout")}"
   filename          = "source.zip"
 
   lifecycle = {
