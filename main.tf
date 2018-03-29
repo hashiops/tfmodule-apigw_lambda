@@ -5,7 +5,7 @@ module "lambda-default-iam" {
 }
 
 resource "aws_lambda_function" "function" {
-  function_name     = "${lookup(var.dataStructure,"lambda_function_name")}"
+  function_name     = "${var.environment}-${lookup(var.dataStructure,"lambda_function_name")}"
   role              = "${module.lambda-default-iam.lambda_role_arn}"
   handler           = "${lookup(var.dataStructure,"lambda_function_handler")}"
   runtime           = "${lookup(var.dataStructure,"lambda_function_runtime")}"
@@ -26,24 +26,26 @@ resource "aws_lambda_function" "function" {
 }
 
 resource "aws_api_gateway_rest_api" "RootAPI" {
-  name        = "${lookup(var.dataStructure,"api_gateway_name")}"
+  name        = "${upper(var.environment)}-${lookup(var.dataStructure,"api_gateway_name")}"
   description = "${lookup(var.dataStructure,"api_gateway_description")}"
 }
 
-resource "aws_route53_record" "api_cname" {
-  zone_id = "${var.route53_zone_id}"
-  name    = "${lookup(var.dataStructure,"lambda_function_name")}"
-  type    = "CNAME"
-  ttl     = 300
-  records = ["${aws_api_gateway_rest_api.RootAPI.id}.execute-api.${var.region}.amazonaws.com"]
+resource "aws_api_gateway_domain_name" "RootAPI" {
+  domain_name = "${var.environment}-${lookup(var.dataStructure,"lambda_function_name")}.${var.root_domain}"
+
+  certificate_name = "${var.environment}-${lookup(var.dataStructure,"lambda_function_name")}.${var.root_domain}"
+  certificate_arn  = "${lookup(var.dataStructure,"api_gateway_acm_cert")}"
 }
 
-# resource "aws_lambda_permission" "allow_api_gateway" {
-#   depends_on    = ["aws_api_gateway_rest_api.RootAPI"]
-#   function_name = "${aws_lambda_function.function.arn}"
-#   statement_id  = "AllowExecutionFromApiGateway"
-#   action        = "lambda:InvokeFunction"
-#   principal     = "apigateway.amazonaws.com"
-#   source_arn    = "arn:aws:execute-api:${var.region}:${var.accountId}:${element(aws_api_gateway_rest_api.RootAPI.*.id, count.index)}/*/${upper(lookup(var.dataStructure[count.index],"api_gateway_method"))}/${lookup(var.dataStructure[count.index],"api_gateway_path")}"
-#   qualifier     = "${element(aws_lambda_alias.alias.*.name, count.index)}"
-# }
+resource "aws_route53_record" "RootAPI" {
+  zone_id = "${var.route53_zone_id}"
+
+  name = "${aws_api_gateway_domain_name.RootAPI.domain_name}"
+  type = "A"
+
+  alias {
+    name                   = "${aws_api_gateway_domain_name.RootAPI.cloudfront_domain_name}"
+    zone_id                = "${aws_api_gateway_domain_name.RootAPI.cloudfront_zone_id}"
+    evaluate_target_health = true
+  }
+}
