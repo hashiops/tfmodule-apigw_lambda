@@ -10,6 +10,7 @@ resource "aws_lambda_function" "function" {
   handler           = "${lookup(var.dataStructure,"lambda_function_handler")}"
   runtime           = "${lookup(var.dataStructure,"lambda_function_runtime")}"
   timeout           = "${lookup(var.dataStructure,"lambda_function_timeout")}"
+  memory_size       = "${lookup(var.dataStructure,"lambda_function_memory")}"
   filename          = "source.zip"
 
   lifecycle = {
