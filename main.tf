@@ -46,6 +46,11 @@ resource "aws_api_gateway_domain_name" "RootAPI" {
   certificate_arn  = "${lookup(var.dataStructure,"api_gateway_acm_cert")}"
 }
 
+resource "aws_api_gateway_base_path_mapping" "RootAPI" {
+  api_id      = "${aws_api_gateway_rest_api.RootAPI.id}"
+  domain_name = "${aws_api_gateway_domain_name.RootAPI.domain_name}"
+}
+
 resource "aws_route53_record" "RootAPI" {
   zone_id = "${var.route53_zone_id}"
 
