@@ -31,7 +31,7 @@ resource "aws_api_gateway_rest_api" "RootAPI" {
 }
 
 # resource "null_resource" "RootAPI_configuration" {
-# 
+#
 #   triggers {
 #     endpoint_configuration_type = "${aws_api_gateway_rest_api.RootAPI.id}"
 #   }
@@ -55,5 +55,6 @@ resource "aws_route53_record" "RootAPI" {
   alias {
     name                   = "${aws_api_gateway_domain_name.RootAPI.cloudfront_domain_name}"
     zone_id                = "${aws_api_gateway_domain_name.RootAPI.cloudfront_zone_id}"
+    evaluate_target_health = true
   }
 }
