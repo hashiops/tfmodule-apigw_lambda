@@ -15,8 +15,8 @@ resource "aws_lambda_function" "function" {
 
   environment {
     variables = {
-      region = "${var.region}"
-      dbUrl = "${lookup(var.dataStructure,"lambda_db_url")}"
+      databaseConfigurationRegion = "${var.region}"
+      databaseConfigurationUrl = "${lookup(var.dataStructure,"lambda_db_url")}"
     }
   }
 
