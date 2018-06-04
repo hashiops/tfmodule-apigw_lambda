@@ -2,6 +2,9 @@
 
 module "lambda-default-iam" {
   source = "github.com/hashiops/tfmodule-lambda_default_iam"
+
+  environment = "${var.environment}"
+  application_name = "${lookup(var.dataStructure,"lambda_function_name")}"
 }
 
 resource "aws_lambda_function" "function" {
