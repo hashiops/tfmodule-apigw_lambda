@@ -26,8 +26,8 @@ resource "aws_lambda_function" "function" {
   }
 
   vpc_config {
-       subnet_ids = ["${lookup(var.dataStructure,"lambda_subnet_ids"}"]
-       security_group_ids = ["${lookup(var.dataStructure,"lambda_security_group_ids"}"]
+       subnet_ids = ["${split(",", lookup(var.dataStructure,"lambda_subnet_ids"))}"]
+       security_group_ids = ["${split(",", lookup(var.dataStructure,"lambda_security_group_ids"))}"]
    }
 
   lifecycle = {
