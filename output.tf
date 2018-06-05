@@ -1,5 +1,5 @@
 output "lambda_function_id" {
-  value = "${aws_lambda_function.function.id}"
+  value = "${aws_lambda_function.function.0.id}"
 }
 
 output "apigw_id" {

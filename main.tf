@@ -8,6 +8,35 @@ module "lambda-default-iam" {
 }
 
 resource "aws_lambda_function" "function" {
+  count             = "${lookup(var.dataStructure,"lambda_vpc") ? 1 : 0}"
+  function_name     = "${var.environment}-${lookup(var.dataStructure,"lambda_function_name")}"
+  role              = "${module.lambda-default-iam.lambda_role_arn}"
+  handler           = "${lookup(var.dataStructure,"lambda_function_handler")}"
+  runtime           = "${lookup(var.dataStructure,"lambda_function_runtime")}"
+  timeout           = "${lookup(var.dataStructure,"lambda_function_timeout")}"
+  memory_size       = "${lookup(var.dataStructure,"lambda_function_memory")}"
+  filename          = "source.zip"
+
+  environment {
+    variables = {
+      databaseConfigurationRegion = "${var.region}"
+      databaseConfigurationUrl = "${lookup(var.dataStructure,"lambda_db_url")}"
+      env = "${lookup(var.dataStructure,"environment")}"
+    }
+  }
+
+  vpc_config {
+       subnet_ids = ["${lookup(var.dataStructure,"lambda_subnet_ids"}"]
+       security_group_ids = ["${lookup(var.dataStructure,"lambda_security_group_ids"}"]
+   }
+
+  lifecycle = {
+    ignore_changes = ["filename"]
+  }
+}
+
+resource "aws_lambda_function" "function" {
+  count             = "${lookup(var.dataStructure,"lambda_vpc") ? 0 : 1}"
   function_name     = "${var.environment}-${lookup(var.dataStructure,"lambda_function_name")}"
   role              = "${module.lambda-default-iam.lambda_role_arn}"
   handler           = "${lookup(var.dataStructure,"lambda_function_handler")}"
