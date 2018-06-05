@@ -9,6 +9,7 @@ module "lambda-default-iam" {
 
 resource "aws_lambda_function" "function" {
 #  count             = "${lookup(var.dataStructure,"lambda_vpc") ? 1 : 0}"
+  depends_on        = ["module.lambda-default-iam"]
   function_name     = "${var.environment}-${lookup(var.dataStructure,"lambda_function_name")}"
   role              = "${module.lambda-default-iam.lambda_role_arn}"
   handler           = "${lookup(var.dataStructure,"lambda_function_handler")}"
