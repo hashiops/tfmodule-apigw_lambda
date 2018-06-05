@@ -7,9 +7,17 @@ module "lambda-default-iam" {
   application_name = "${lookup(var.dataStructure,"lambda_function_name")}"
 }
 
+# https://github.com/terraform-providers/terraform-provider-aws/issues/2826
+resource "null_resource" "delay" {
+  depends_on = ["module.lambda-default-iam"]
+  provisioner "local-exec" {
+    command = "sleep 15"
+  }
+}
+
 resource "aws_lambda_function" "function" {
 #  count             = "${lookup(var.dataStructure,"lambda_vpc") ? 1 : 0}"
-  depends_on        = ["module.lambda-default-iam"]
+  depends_on        = ["null_resource.delay"]
   function_name     = "${var.environment}-${lookup(var.dataStructure,"lambda_function_name")}"
   role              = "${module.lambda-default-iam.lambda_role_arn}"
   handler           = "${lookup(var.dataStructure,"lambda_function_handler")}"
