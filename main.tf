@@ -43,6 +43,11 @@ resource "aws_lambda_function" "function" {
   lifecycle = {
     ignore_changes = ["filename"]
   }
+
+  tags {
+    env	       = "${lookup(var.dataStructure,"environment")}"
+    project	       = "${lookup(var.dataStructure,"project")}"
+  }
 }
 
 # resource "aws_lambda_function" "function" {
@@ -76,6 +81,7 @@ resource "aws_api_gateway_account" "main" {
 resource "aws_api_gateway_rest_api" "RootAPI" {
   name        = "${upper(var.environment)}-${lookup(var.dataStructure,"api_gateway_name")}"
   description = "${lookup(var.dataStructure,"api_gateway_description")}"
+  binary_media_types = ["${lookup(var.dataStructure,"api_gateway_binary_media_types")}"]
 }
 
 # resource "null_resource" "RootAPI_configuration" {
